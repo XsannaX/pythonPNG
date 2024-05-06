@@ -1,12 +1,12 @@
 1.19-194924_tap-to-unmute-lee-jong-suk-ceci-2014.png
 IHDR, iCCP, iTXt, IDAT ×283, IEND
-2.basn6a08.png
+2.basn6a08.png !
 IHDR, gAMA, IDAT, IEND
-3.bgwn6a08.png
+3.bgwn6a08.png !
 IHDR, gAMA, bKGD, IDAT, IEND
 4.ccwn2c08.png
 IHDR, gAMA, cHRM, IDAT, IEND
-5.ch2n3p08.png
+5.ch2n3p08.png !
 IHDR, gAMA, PLTE, hIST, IDAT, IEND
 6.good_bkgd_sans-palette.png
 IHDR, bKGD, IDAT, IEND
@@ -20,3 +20,19 @@ IHDR, IDAT, tIME, IEND
 IHDR, tEXt, iTXt, IDAT, IEND
 11.cat.png
 IDHR,PLTE,IDAT,IEND
+12.linux.png
+IHDR, bKGD, IDAT, IEND
+13.Nyan_cat_250px_frame.png
+IHDR', sRGB, gAMA, cHRM, IDAT, IEND
+
+//////////////////////////////////
+-zmiana najmniej istotnych bitów w pikselach
+-modyfikacja kanałow kolorow, zmiana jasności niektorych pikseli
+-palata kolorow, zmienic nirktore wartosci kolorow w palecie,ich kolejnosc
+-ukrywanie danych w kanale alfa, zmiana przezroczystosci
+-ukrywanie danych w kompresji-wybor filtru
+-ukrywanie danych w histogramie
+-ukrywanie danych w teksturach, zmiana jasnosci,kontrastu pikseli w obszrach o podobnch teksturach
+-ukrywanie w znieksztalceniach obrazu, przesuniecie pikseli,zmiana rozmiaru
+-metadata
+-dodawanie szumu

@@ -32,6 +32,8 @@ class Chunk:
             assert self.filterm == 0, "Invalid filter method"
             assert self.interlacem in [0, 1], "Invalid interlace method"
         if self.type == b'PLTE':
+            """
+            sluza do opisywania koloru za pomoca numerow"""
             self.colors = []
             for i in range(0, len(self.data), 3):
                 r = self.data[i]
@@ -61,6 +63,9 @@ class Chunk:
             assert all(is_latin_character(char) for char in self.keyword), "Invalid character in keyword."
             self.string = (f"Keyword: {self.keyword}, Text: {self.text}")
         if self.type == b'cHRM':
+            """
+            okresla polozenie punktow bieli,czerwonego,zielonego,niebieskiego.sluzy do umiejscowienia obrazu w calym ekosystemie przestrzeni kolorystycznych
+            """
             assert len(self.data) == 32, "Invalid cHRM chunk length. Expected length: 32 bytes"
             self.white_x, self.white_y, self.red_x, self.red_y, self.green_x, self.green_y, self.blue_x, self.blue_y = struct.unpack(
                 '>IIIIIIII', self.data)

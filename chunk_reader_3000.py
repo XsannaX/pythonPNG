@@ -10,7 +10,7 @@ from ChunksFactory import *
 class IlovePng:
 
     def __init__(self, image):
-        self.chunks = []  #all chunks and all info about them
+        self.chunks = []  # all chunks and all info about them
         self.types = []  # only the chunk`s type
         self.idat_data = []
         try:
@@ -60,31 +60,72 @@ class IlovePng:
         """
         fourier transformation and magnitude
         """
+        M = np.float32([
+            [1, 0, 150],
+            [0, 1, 0]
+        ])
         img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
-        # Wykonaj transformatę Fouriera
+        img_sh = cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
+        img_rotate = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+        # fourier transform
         fourier = np.fft.fft2(img)
         fourier_shifted = np.fft.fftshift(fourier)
-        # Oblicz moduł transformaty Fouriera
+        fourier_sh = np.fft.fft2(img_sh)
+        fourier_shifted_sh = np.fft.fftshift(fourier_sh)
+        fourier_rotate = np.fft.fft2(img_rotate)
+        fourier_shifted_rotate = np.fft.fftshift(fourier_rotate)
+        # get transform module - magnitude
         magnitude_spectrum = 20 * np.log(np.abs(fourier_shifted))
+        magnitude_spectrum_sh = 20 * np.log(np.abs(fourier_shifted_sh))
+        magnitude_spectrum_rotate = 20 * np.log(np.abs(fourier_shifted_rotate))
+        phase = np.angle(fourier_shifted)
+        phase_sh = np.angle(fourier_shifted_sh)
+        phase_rotate = np.angle(fourier_shifted_rotate)
         # magnitude_spectrum = np.asarray(20 * np.log10(np.abs(fourier_shifted)), dtype=np.uint8)
         inverse_shifted = np.fft.ifftshift(fourier_shifted)
         inverse_fourier = np.fft.ifft2(inverse_shifted)
         inverse_fourier = np.abs(inverse_fourier)
 
-        # Wyświetl obraz oryginalny i jego widmo
+        # show original image and magnitude
         f1 = plt.figure(1)
-        plt.subplot(121), plt.imshow(img, cmap='gray')
+        plt.subplot(131), plt.imshow(img, cmap='gray')
         plt.title('Obraz oryginalny'), plt.xticks([]), plt.yticks([])
-        plt.subplot(122), plt.imshow(magnitude_spectrum, cmap='gray')
+        plt.subplot(132), plt.imshow(magnitude_spectrum, cmap='gray')
         plt.title('Widmo amplitudowe'), plt.xticks([]), plt.yticks([])
+        plt.subplot(133), plt.imshow(phase, cmap='gray')
+        plt.title('Faza'), plt.xticks([]), plt.yticks([])
         plt.show()
 
-        # sprawdzenie czy jest poprawne
+        # check if correct
         f2 = plt.figure(2)
         plt.subplot(121), plt.imshow(img, cmap='gray')
         plt.title('Obraz oryginalny'), plt.xticks([]), plt.yticks([])
         plt.subplot(122), plt.imshow(inverse_fourier, cmap='gray')
         plt.title('IFFT'), plt.xticks([]), plt.yticks([])
+        plt.show()
+
+        # compare magnitude and phase
+        f3 = plt.figure(3)
+        plt.subplot(331), plt.imshow(img, cmap='gray')
+        plt.title('Obraz oryginalny'), plt.xticks([]), plt.yticks([])
+        plt.subplot(332), plt.imshow(magnitude_spectrum, cmap='gray')
+        plt.title('Oryginalny obraz - widmo'), plt.xticks([]), plt.yticks([])
+        plt.subplot(333), plt.imshow(phase, cmap='gray')
+        plt.title('Oryginalny obraz - faza'), plt.xticks([]), plt.yticks([])
+
+        plt.subplot(334), plt.imshow(img_sh, cmap='gray')
+        plt.title('Przesuniety obraz'), plt.xticks([]), plt.yticks([])
+        plt.subplot(335), plt.imshow(magnitude_spectrum_sh, cmap='gray')
+        plt.title('Przesuniety obraz - widmo'), plt.xticks([]), plt.yticks([])
+        plt.subplot(336), plt.imshow(phase_sh, cmap='gray')
+        plt.title('Przesuniety obraz - faza'), plt.xticks([]), plt.yticks([])
+
+        plt.subplot(337), plt.imshow(img_rotate, cmap='gray')
+        plt.title('Obrócony obraz'), plt.xticks([]), plt.yticks([])
+        plt.subplot(338), plt.imshow(magnitude_spectrum_rotate, cmap='gray')
+        plt.title('Obrócony obraz - widmo'), plt.xticks([]), plt.yticks([])
+        plt.subplot(339), plt.imshow(phase_rotate, cmap='gray')
+        plt.title('Obrócony obraz - faza'), plt.xticks([]), plt.yticks([])
         plt.show()
 
     def idat_make(self):
@@ -122,21 +163,21 @@ class IlovePng:
         idhr_bitd = bytes_per_pixel[self.chunks[0].colort]
         stride = self.chunks[0].width * idhr_bitd
         i = 0
-        for r in range(self.chunks[0].height):
+        for r in range(self.chunks[0].height):  # scaline
             filter_type = idat[i]
             i += 1
-            for c in range(stride):
+            for c in range(stride):  # each byte in scaline
                 Filt_x = idat[i]
                 i += 1
-                if filter_type == 0:  #none
+                if filter_type == 0:  # none
                     Recon_x = Filt_x
-                elif filter_type == 1:  #sub
+                elif filter_type == 1:  # sub
                     Recon_x = Filt_x + find_a(r, c)
-                elif filter_type == 2:  #ip
+                elif filter_type == 2:  # up
                     Recon_x = Filt_x + find_b(r, c)
-                elif filter_type == 3:  #average
+                elif filter_type == 3:  # average
                     Recon_x = Filt_x + (find_a(r, c) + find_b(r, c)) // 2
-                elif filter_type == 4:  #paeth
+                elif filter_type == 4:  # paeth
                     pass
                     Recon_x = Filt_x + paeth(find_a(r, c), find_b(r, c), find_c(r, c))
                 else:
@@ -166,7 +207,7 @@ class IlovePng:
         """
         check if crc is correct
         """
-        return zlib.crc32(img_crc) & 0xffffffff  #ensure that the result is a 32-bit unsigned integer value
+        return zlib.crc32(img_crc) & 0xffffffff  # ensure that the result is a 32-bit unsigned integer value
 
     def make_chunks(self):
         """
@@ -210,7 +251,7 @@ class IlovePng:
                 if chunk.type == b'bKGD':
                     print("bKGD INFO")
                     colort = self.chunks[0].colort
-                    if colort == 3:  #indexed color
+                    if colort == 3:  # indexed color
                         palette_idx, = struct.unpack('>B', chunk.data)
                         print(palette_idx)
                         plte_id = self.types.index(b'PLTE')
@@ -222,7 +263,7 @@ class IlovePng:
                         plt.imshow(image_data)
                         plt.title("bKGD")
                         plt.show()
-                    elif colort == 0 or colort == 4:  #grayscale (alpha/no alpha)
+                    elif colort == 0 or colort == 4:  # grayscale (alpha/no alpha)
                         gray_scale, = struct.unpack('>H', chunk.data)
                         print(gray_scale)
                         image_data = np.full((self.chunks[0].height, self.chunks[0].width, 3), gray_scale,
@@ -230,7 +271,7 @@ class IlovePng:
                         plt.imshow(image_data, cmap='gray')
                         plt.title("bKGD")
                         plt.show()
-                    elif colort == 2 or colort == 6:  #truecolor (alpha/no alpha)
+                    elif colort == 2 or colort == 6:  # truecolor (alpha/no alpha)
                         r, g, b = struct.unpack('>HHH', chunk.data)
                         print(r, g, b)
                         image_data = np.full((self.chunks[0].height, self.chunks[0].width, 3), (r, g, b),
@@ -245,7 +286,7 @@ class IlovePng:
             for x in self.chunks:
                 if x.type == b'hIST':
                     print("hIST INFO")
-                    #print(x.color_frequencies)
+                    # print(x.color_frequencies)
                     for index, frequency in enumerate(x.hist_data):
                         print(f"{index}: {frequency}")
 
@@ -359,15 +400,15 @@ class IlovePng:
                 assert bkgd_indx > self.types.index(b'PLTE'), "bKGD chunk must be after the PLTE chunk"
             assert self.chunks[0].colort in [0, 2, 3, 4,
                                              6], "bKGD chunk is not applicable for the color type of the image."
-            if self.chunks[0].colort in [0, 4]:  #grayscale
+            if self.chunks[0].colort in [0, 4]:  # grayscale
                 assert len(
                     self.chunks[self.types.index(
                         b'bKGD')].data) == 2, "Invalid bKGD chunk length for grayscale images. Expected length: 2 bytes."
-            elif self.chunks[0].colort in [2, 6]:  #truecolor
+            elif self.chunks[0].colort in [2, 6]:  # truecolor
                 assert len(
                     self.chunks[self.types.index(
                         b'bKGD')].data) == 6, "Invalid bKGD chunk length for truecolor images. Expected length: 6 bytes."
-            elif self.chunks[0].colort == 3:  #indexed-color
+            elif self.chunks[0].colort == 3:  # indexed-color
                 assert len(
                     self.chunks[self.types.index(
                         b'bKGD')].data) == 1, "Invalid bKGD chunk length for indexed-color images. Expected length: 1 byte."
@@ -393,7 +434,7 @@ class IlovePng:
 
 
 if __name__ == '__main__':
-    image = 'pics/cat.png'
+    image = 'pics/fourier.png'
     image1 = mpimg.imread(image)
     plt.imshow(image1)
     plt.title("Oryginalne zdjęcie")
